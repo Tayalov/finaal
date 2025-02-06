@@ -1,176 +1,162 @@
+import java.sql.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.sql.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class GUI extends JFrame {
-    private JTextField nameField, ageField, majorField;
-    private JTextArea outputArea;
-    private JButton addButton, updateButton, deleteButton, viewButton;
+public class LibraryGUI extends JFrame {
+    private Library library;
+    private JList<String> departmentList;
+    private JList<String> editionList;
 
-    private static final String URL = "jdbc:mysql://localhost:3306/university";  // URL базы данных
-    private static final String USER = "root";  // Ваш MySQL username
-    private static final String PASSWORD = "password"; // Ваш MySQL пароль
+    public LibraryGUI() {
+        setTitle("Library Management System");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        setLayout(new BorderLayout());
 
-    public GUI() {
-        // Настройка окна JFrame
-        setTitle("Приложение для работы с базой данных студентов");
-        setSize(400, 400);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new FlowLayout());
+        library = new Library("Central Library");
 
-        // Поля ввода
-        nameField = new JTextField(15);
-        ageField = new JTextField(15);
-        majorField = new JTextField(15);
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.add("Library", createLibraryPanel());
+        tabbedPane.add("Departments", createDepartmentPanel());
+        tabbedPane.add("Editions", createEditionPanel());
 
-        // Кнопки
-        addButton = new JButton("Добавить студента");
-        updateButton = new JButton("Обновить студента");
-        deleteButton = new JButton("Удалить студента");
-        viewButton = new JButton("Просмотреть студентов");
+        add(tabbedPane, BorderLayout.CENTER);
+    }
 
-        // Область вывода для отображения данных
-        outputArea = new JTextArea(10, 30);
-        outputArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(outputArea);
+    private JPanel createLibraryPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
 
-        // Добавление компонентов в окно
-        add(new JLabel("Имя:"));
-        add(nameField);
-        add(new JLabel("Возраст:"));
-        add(ageField);
-        add(new JLabel("Специальность:"));
-        add(majorField);
+        JButton addLibraryButton = new JButton("Add Library");
+        JTextField libraryNameField = new JTextField(20);
 
-        add(addButton);
-        add(updateButton);
-        add(deleteButton);
-        add(viewButton);
-
-        add(scrollPane);
-
-        // Добавление обработчиков событий для кнопок
-        addButton.addActionListener(new ActionListener() {
+        addLibraryButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                addStudent();
+                String name = libraryNameField.getText();
+                if (!name.isEmpty()) {
+                    library.setName(name);
+                    JOptionPane.showMessageDialog(LibraryGUI.this, "Library name set to: " + name);
+                } else {
+                    JOptionPane.showMessageDialog(LibraryGUI.this, "Please enter a library name.");
+                }
             }
         });
 
-        updateButton.addActionListener(new ActionListener() {
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(new JLabel("Library Name:"));
+        buttonPanel.add(libraryNameField);
+        buttonPanel.add(addLibraryButton);
+
+        panel.add(buttonPanel, BorderLayout.NORTH);
+        return panel;
+    }
+
+    private JPanel createDepartmentPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JTextField departmentNameField = new JTextField(20);
+        JButton addDepartmentButton = new JButton("Add Department");
+
+        addDepartmentButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                updateStudent();
+                String genre = departmentNameField.getText();
+                if (!genre.isEmpty()) {
+                    Department department = new Department(genre);
+                    library.addDepartment(department);
+                    JOptionPane.showMessageDialog(LibraryGUI.this, "Department '" + genre + "' added.");
+                    updateDepartmentList();
+                } else {
+                    JOptionPane.showMessageDialog(LibraryGUI.this, "Please enter a genre for the department.");
+                }
             }
         });
 
-        deleteButton.addActionListener(new ActionListener() {
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(new JLabel("Department Genre:"));
+        buttonPanel.add(departmentNameField);
+        buttonPanel.add(addDepartmentButton);
+
+        panel.add(buttonPanel, BorderLayout.NORTH);
+
+        departmentList = new JList<>();
+        panel.add(new JScrollPane(departmentList), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel createEditionPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JTextField editionNameField = new JTextField(20);
+        JTextField authorField = new JTextField(20);
+        JTextField yearField = new JTextField(20);
+        JButton addEditionButton = new JButton("Add Edition");
+
+        addEditionButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                deleteStudent();
+                String editionName = editionNameField.getText();
+                String author = authorField.getText();
+                String yearStr = yearField.getText();
+
+                if (!editionName.isEmpty() && !author.isEmpty() && !yearStr.isEmpty()) {
+                    try {
+                        int year = Integer.parseInt(yearStr);
+                        Edition edition = new Edition(editionName, author, year);
+                        Department selectedDepartment = library.getDepartments().get(departmentList.getSelectedIndex());
+                        selectedDepartment.addEdition(edition);
+                        JOptionPane.showMessageDialog(LibraryGUI.this, "Edition added.");
+                        updateEditionList();
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(LibraryGUI.this, "Invalid year format.");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(LibraryGUI.this, "Please fill all fields.");
+                }
             }
         });
 
-        viewButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                viewStudents();
-            }
-        });
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(new JLabel("Edition Name:"));
+        buttonPanel.add(editionNameField);
+        buttonPanel.add(new JLabel("Author:"));
+        buttonPanel.add(authorField);
+        buttonPanel.add(new JLabel("Year:"));
+        buttonPanel.add(yearField);
+        buttonPanel.add(addEditionButton);
 
-        setVisible(true);
+        panel.add(buttonPanel, BorderLayout.NORTH);
+
+        editionList = new JList<>();
+        panel.add(new JScrollPane(editionList), BorderLayout.CENTER);
+
+        return panel;
     }
 
-    // Метод для добавления студента в базу данных
-    private void addStudent() {
-        String name = nameField.getText();
-        int age = Integer.parseInt(ageField.getText());
-        String major = majorField.getText();
-
-        String query = "INSERT INTO students (name, age, major) VALUES (?, ?, ?)";
-
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
-            ps.setString(1, name);
-            ps.setInt(2, age);
-            ps.setString(3, major);
-
-            int rowsInserted = ps.executeUpdate();
-            if (rowsInserted > 0) {
-                outputArea.append("Студент успешно добавлен!\n");
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+    private void updateDepartmentList() {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        for (Department dept : library.getDepartments()) {
+            model.addElement(dept.getGenre());
         }
+        departmentList.setModel(model);
     }
 
-    // Метод для обновления информации о студенте
-    private void updateStudent() {
-        String name = nameField.getText();
-        int age = Integer.parseInt(ageField.getText());
-
-        String query = "UPDATE students SET age = ? WHERE name = ?";
-
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
-            ps.setInt(1, age);
-            ps.setString(2, name);
-
-            int rowsUpdated = ps.executeUpdate();
-            if (rowsUpdated > 0) {
-                outputArea.append("Информация о студенте обновлена!\n");
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+    private void updateEditionList() {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        Department selectedDepartment = library.getDepartments().get(departmentList.getSelectedIndex());
+        for (Edition edition : selectedDepartment.getEditions()) {
+            model.addElement(edition.getName() + " by " + edition.getAuthor() + " (" + edition.getYearOfPublication() + ")");
         }
+        editionList.setModel(model);
     }
 
-    // Метод для удаления студента
-    private void deleteStudent() {
-        String name = nameField.getText();
-
-        String query = "DELETE FROM students WHERE name = ?";
-
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
-            ps.setString(1, name);
-
-            int rowsDeleted = ps.executeUpdate();
-            if (rowsDeleted > 0) {
-                outputArea.append("Студент успешно удалён!\n");
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    // Метод для просмотра всех студентов
-    private void viewStudents() {
-        String query = "SELECT * FROM students";
-
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             Statement statement = conn.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
-
-            outputArea.setText("Список студентов:\n");
-            while (resultSet.next()) {
-                outputArea.append("ID: " + resultSet.getInt("id") +
-                        ", Имя: " + resultSet.getString("name") +
-                        ", Возраст: " + resultSet.getInt("age") +
-                        ", Специальность: " + resultSet.getString("major") + "\n");
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    // Главный метод для запуска приложения
     public static void main(String[] args) {
-        new GUI();
+        SwingUtilities.invokeLater(() -> {
+            LibraryGUI gui = new LibraryGUI();
+            gui.setVisible(true);
+        });
     }
 }
-
