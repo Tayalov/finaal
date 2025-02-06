@@ -1,28 +1,34 @@
+import java.util.List;
+
 public class Main {
     public static void main(String[] args) {
-        Library library = new Library("Central Library");
+        Library library = new Library("Kazakh national Library", 100);
 
-        Department sciFi = new Department("Science Fiction", library);
-        Department history = new Department("History", library);
+        Department dept1 = new Department("Roman ", library);
+        Department dept2 = new Department("Kazakh Adebi", library);
+        library.addDepartment(dept1);
+        library.addDepartment(dept2);
 
-        library.addDepartment(sciFi);
-        library.addDepartment(history);
+        Edition pb1 = new Edition("Bakytsiz Zhamal", 1910, dept1);
+        Edition pb3 = new Edition("Abai", 1935, dept1);
+        Edition pb2 = new Edition("Bir kem dunie", 1998, dept2);
+        Edition pb4 = new Edition("Ai men Aisha",1998,dept2);
 
-        Edition dune = new Edition("Dune", "Frank Herbert", 1965, sciFi);
-        Edition neuromancer = new Edition("Neuromancer", "William Gibson", 1984, sciFi);
-        Edition historyBook = new Edition("History of Rome", "T. J. Cornell", 1995, history);
+        dept1.addEdition(pb1);
+        dept1.addEdition(pb2);
+        dept2.addEdition(pb3);
+        dept2.addEdition(pb4);
 
-        sciFi.addEdition(dune);
-        sciFi.addEdition(neuromancer);
-        history.addEdition(historyBook);
+        library.displayLibraryInfo();
+        library.removeDepartment(dept2);
 
-        // Выводим данные о библиотеках и их изданиях
-        for (Department dept : library.getDepartments()) {
-            System.out.println("Department: " + dept.getName());
-            System.out.println("Number of editions: " + dept.getNumberOfEditions());
+        System.out.println("\nAfter removing Kazakh Adebi Department:");
+        library.displayLibraryInfo();
+
+        List<Edition> searchResults = library.searchPublicationsByYear(1998);
+        System.out.println("\nSearch results for publications from year 1998:");
+        for (Edition edition : searchResults) {
+            System.out.println(edition.getTitle() + " in " + edition.getDepartment().getLibrary().getDepartments().get(0).getLibrary().getDepartments());
         }
-
-        // Поиск публикаций по году
-        library.searchEditionsByYear(1984);
     }
 }

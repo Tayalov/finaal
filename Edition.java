@@ -1,25 +1,20 @@
 public class Edition {
-    private int editionId;
-    private String name;
-    private String author;
-    private int publicationYear;
+    private String title;
+    private int year;
     private Department department;
 
-    public Edition(String name, String author, int publicationYear, Department department) {
-        this.name = name;
-        this.author = author;
-        this.publicationYear = publicationYear;
+    public Edition(String title, int year, Department department) {
+        this.title = title;
+        this.year = year;
         this.department = department;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
-
-    public int getPublicationYear() {
-        return publicationYear;
+    public int getYear() {
+        return year;
     }
-
     public Department getDepartment() {
         return department;
     }
