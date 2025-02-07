@@ -17,7 +17,8 @@ public class GUI extends JFrame {
         setLayout(new BorderLayout());
 
         try {
-            connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/LibraryDB", "postgres", "postgres");
+            // Подключение к MySQL базе данных
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/library_db", "root", "taya"); // Замените 'root' на свой логин и пароль
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error connecting to database: " + e.getMessage());
             System.exit(1);
@@ -45,14 +46,19 @@ public class GUI extends JFrame {
         addButton.addActionListener(e -> {
             String idStr = JOptionPane.showInputDialog("Enter Library ID:");
             String name = JOptionPane.showInputDialog("Enter Library Name:");
-            if (idStr != null && name != null && !idStr.isEmpty() && !name.isEmpty()) {
+            String address = JOptionPane.showInputDialog("Enter Library Address:"); // Добавляем ввод адреса
+
+            if (idStr != null && name != null && address != null &&
+                    !idStr.isEmpty() && !name.isEmpty() && !address.isEmpty()) {
                 try {
                     int id = Integer.parseInt(idStr);
-                    executeUpdate("INSERT INTO Library (id, name) VALUES (?, ?)", id, name);
+                    executeUpdate("INSERT INTO Library (id, name, address) VALUES (?, ?, ?)", id, name, address);
                     refreshLibraries();
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Invalid ID format.");
+                    JOptionPane.showMessageDialog(null, "Invalid ID format.");
                 }
+            } else {
+                JOptionPane.showMessageDialog(null, "All fields must be filled.");
             }
         });
 
@@ -309,3 +315,4 @@ public class GUI extends JFrame {
         });
     }
 }
+
